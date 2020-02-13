@@ -107,8 +107,10 @@ void loop() {
     }
  
     if (eaten) {     //randomly create a new piece of food if last was eaten
-      foodX = random(2, 9);
-      foodY = random(2, 17);
+      do {           //but not inside the snake's body
+        foodX = random(2, 9);
+        foodY = random(2, 17);
+      } while (belongsToBody(foodX, foodY));
       eaten = false;
     }
 
@@ -118,25 +120,10 @@ void loop() {
       endGame();
     }
 
-    if (loopCount - score < 0) {         //check to see if head is on tail
-      for (int j = 0; j < loopCount; j++) {
-        if (headX == beenHeadX[j] and headY == beenHeadY[j]) {
-          endGame();
-        }
-      }
-      for (int k = clearPoint; k < 152; k++) {
-        if (headX == beenHeadX[k] and headY == beenHeadY[k]) {
-          endGame();
-        }
-      }
+    if (belongsToBody(headX, headY)) {
+      endGame();
     }
-    else {
-      for (int i = loopCount - (score - 1); i < loopCount; i++) {
-        if (headX == beenHeadX[i] and headY == beenHeadY[i]) {
-          endGame();
-        }
-      }
-    }
+
     offsetM = millis(); //reset game loop timer
   }
 }
@@ -188,6 +175,31 @@ void printScore() {
   tft.fillRect(88, 3, 50, 16, TFT_WHITE);//clears old score
   tft.setCursor(88, 3);
   tft.print(score);                            //prints current score
+}
+
+bool belongsToBody(int x, int y)
+{
+  if (loopCount - score < 0) {         //check to see if head is on tail
+    for (int j = 0; j < loopCount; j++) {
+      if (x == beenHeadX[j] and y == beenHeadY[j]) {
+        return true;
+      }
+    }
+    for (int k = clearPoint; k < 152; k++) {
+      if (x == beenHeadX[k] and y == beenHeadY[k]) {
+        return true;
+      }
+    }
+  }
+  else {
+    for (int i = loopCount - (score - 1); i < loopCount; i++) {
+      if (x == beenHeadX[i] and y == beenHeadY[i]) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 void left() {
