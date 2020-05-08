@@ -9,6 +9,16 @@ float gameSpeed = 5;  //Higher faster
 #include <SPI.h>
 #include <TFT_eSPI.h>
 
+#ifndef TFT_DISPOFF
+#define TFT_DISPOFF 0x28
+#endif
+
+#ifndef TFT_SLPIN
+#define TFT_SLPIN   0x10
+#endif
+
+#define ADC_EN          14
+#define ADC_PIN         34
 #define BUTTON_1        35
 #define BUTTON_2        0
 
@@ -34,6 +44,7 @@ boolean eaten = true; //if true a new food will be made
 int loopCount = 0; //number of times the loop has run
 int clearPoint = 0;  //when the loopCount is reset
 boolean clearScore = false;
+uint32_t suspendCount = 0;
 
 //initialize the display
 TFT_eSPI tft = TFT_eSPI(135, 240);
@@ -71,6 +82,7 @@ void setup() {
 }
 
 void loop() {
+  if (suspendCount++>10000000) suspend(); //auto suspend after ~10 sec.
   if (clearScore and start) { //resets score from last game, won't clear
     score = 1;                //until new game starts so you can show off
     printScore();             //your own score
@@ -202,7 +214,37 @@ bool belongsToBody(int x, int y)
   return false;
 }
 
+void espDelay(int ms)
+{
+    esp_sleep_enable_timer_wakeup(ms * 1000);
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
+    esp_light_sleep_start();
+}
+
+void suspend()
+{
+  suspendCount=0;
+  int r = digitalRead(TFT_BL);
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextColor(TFT_GREEN, TFT_BLACK);
+  tft.setTextSize(1);
+  tft.setTextDatum(MC_DATUM);
+  tft.drawString("Press again to wake up", tft.width() / 2, tft.height() / 2);
+  espDelay(4000);
+  digitalWrite(TFT_BL, !r);
+
+  tft.writecommand(TFT_DISPOFF);
+  tft.writecommand(TFT_SLPIN);
+  //After using light sleep, you need to disable timer wake, because here use external IO port to wake up
+  esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_TIMER);
+  // esp_sleep_enable_ext1_wakeup(GPIO_SEL_35, ESP_EXT1_WAKEUP_ALL_LOW);
+  esp_sleep_enable_ext0_wakeup(GPIO_NUM_35, 0);
+  delay(200);
+  esp_deep_sleep_start();
+}
+
 void left() {
+  suspendCount=0;
   if (start)
   {
     if (millis() - offsetT > gs and !lastMoveH) {
@@ -240,6 +282,7 @@ void left() {
 }
 
 void right() {
+  suspendCount=0;
   if (millis() - offsetT > gs and !lastMoveH) {
     //if (changeY==-1)
     //{
