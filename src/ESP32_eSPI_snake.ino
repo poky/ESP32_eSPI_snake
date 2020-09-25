@@ -36,7 +36,6 @@ int beenHeadX[170];   //coordinates to clear later
 int beenHeadY[170];
 int changeX = 0;      //the direction of the snake
 int changeY = 1;
-boolean lastMoveH = false; //to keep from going back on oneself
 int score = 1;
 int foodX;            //coordinates of food
 int foodY;
@@ -247,29 +246,30 @@ void left() {
   suspendCount=0;
   if (start)
   {
-    if (millis() - offsetT > gs and !lastMoveH) {
-      //if (changeY==-1)
-      //{
-        changeX = -1;
-        changeY = 0;
-        offsetT = millis();
-        lastMoveH = true;
-      //}
-    }
-    else if (millis() - offsetT > gs and lastMoveH) {
+    if (millis() - offsetT > gs ) {
       if (changeX==1)
       {
         changeX = 0;
         changeY = -1;
         offsetT = millis();
-        lastMoveH = false;
       }
       else if (changeX==-1)
       {
         changeX = 0;
         changeY = 1;
         offsetT = millis();
-        lastMoveH = false;
+      }
+      else if (changeY==1)
+      {
+        changeX = 1;
+        changeY = 0;
+        offsetT = millis();
+      }
+      else if (changeY==-1)
+      {
+        changeX = -1;
+        changeY = 0;
+        offsetT = millis();
       }
     }
   }
@@ -283,29 +283,30 @@ void left() {
 
 void right() {
   suspendCount=0;
-  if (millis() - offsetT > gs and !lastMoveH) {
-    //if (changeY==-1)
-    //{
-      changeX = 1;
-      changeY = 0;
-      offsetT = millis();
-      lastMoveH = true;
-    //}
-  }
-  else if (millis() - offsetT > gs and lastMoveH) {
+  if (millis() - offsetT > gs ) {
     if (changeX==1)
     {
       changeX = 0;
       changeY = 1;
       offsetT = millis();
-      lastMoveH = false;
     }
     else if (changeX==-1)
     {
       changeX = 0;
       changeY = -1;
       offsetT = millis();
-      lastMoveH = false;
+    }
+    else if (changeY==1)
+    {
+      changeX = -1;
+      changeY = 0;
+      offsetT = millis();
+    }
+    else if (changeY==-1)
+    {
+      changeX = 1;
+      changeY = 0;
+      offsetT = millis();
     }
   }
 }
